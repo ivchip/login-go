@@ -28,14 +28,14 @@ func Login(writer http.ResponseWriter, request *http.Request)  {
 	}
 	jwtKey, err1 := jwt.GenerateJWT(document)
 	if err1 != nil {
-		http.Error(writer, "An error occurred while trying to generate the token " + err.Error(), http.StatusBadRequest)
+		http.Error(writer, "An error occurred while trying to generate the token " + err1.Error(), http.StatusBadRequest)
 		return
 	}
 	resp := models.ResponseLogin {
 		Token: jwtKey,
 	}
 	writer.Header().Set("content-type", "application/json")
-	writer.WriteHeader(http.StatusCreated)
+	writer.WriteHeader(http.StatusOK)
 	json.NewEncoder(writer).Encode(resp)
 	expirationTime := time.Now().Add(24 * time.Hour)
 	http.SetCookie(writer, &http.Cookie{
