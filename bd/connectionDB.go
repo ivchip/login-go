@@ -8,7 +8,7 @@ import (
 )
 
 var MongoCN = ConnectDB()
-var clientOptions = options.Client().ApplyURI("mongodb+srv://db_user_login:X7yKNqGhK4MDe9zM@cluster0.oo5xp.mongodb.net/db_login?retryWrites=true&w=majority")
+var clientOptions = options.Client().ApplyURI("mongodb+srv://<username>:<password>@cluster0.oo5xp.mongodb.net/<dbname>?retryWrites=true&w=majority")
 
 func ConnectDB() *mongo.Client {
 	client, err := mongo.Connect(context.TODO(), clientOptions)
