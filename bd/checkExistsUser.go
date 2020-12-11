@@ -11,12 +11,11 @@ func CheckIsExitsUser(email string) (models.User, bool, string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15 * time.Second)
 	defer cancel()
 
-	db := MongoCN.Database("db_login")
-	col := db.Collection("users")
+	usersCollection := MongoCN.Database(nameDB).Collection("users")
 
 	conditional := bson.M{"email": email}
 	var result models.User
-	err := col.FindOne(ctx, conditional).Decode(&result)
+	err := usersCollection.FindOne(ctx, conditional).Decode(&result)
 	ID := result.ID.Hex()
 	if err != nil {
 		return result, false, ID

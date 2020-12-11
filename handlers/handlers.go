@@ -13,6 +13,7 @@ import (
 func Managers()  {
 	router := mux.NewRouter()
 	router.HandleFunc("/register", middleware.CheckDB(routers.Register)).Methods("POST")
+	router.HandleFunc("/login", middleware.CheckDB(routers.Login)).Methods("POST")
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {

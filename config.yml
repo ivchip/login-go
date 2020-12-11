@@ -1,0 +1,7 @@
+DB:
+  USERNAME: ""
+  PASSWORD: ""
+  NAME: ""
+
+JWT:
+  KEY: ""

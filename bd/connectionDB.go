@@ -2,13 +2,18 @@ package bd
 
 import (
 	"context"
+	"github.com/ivchip/login-go/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 )
 
+var userDB, _ = utils.GetValueEnvironment("DB.USERNAME")
+var passwordDB, _ = utils.GetValueEnvironment("DB.PASSWORD")
+var nameDB, _ = utils.GetValueEnvironment("DB.NAME")
+var atlasUri = "mongodb+srv://"+ userDB + ":" + passwordDB + "@cluster0.oo5xp.mongodb.net/" + nameDB + "?retryWrites=true&w=majority"
 var MongoCN = ConnectDB()
-var clientOptions = options.Client().ApplyURI("mongodb+srv://<username>:<password>@cluster0.oo5xp.mongodb.net/<dbname>?retryWrites=true&w=majority")
+var clientOptions = options.Client().ApplyURI(atlasUri)
 
 func ConnectDB() *mongo.Client {
 	client, err := mongo.Connect(context.TODO(), clientOptions)

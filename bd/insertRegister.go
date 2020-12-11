@@ -11,10 +11,9 @@ func InsertRegister(u models.User) (string, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15 * time.Second)
 	defer cancel()
 
-	db := MongoCN.Database("db_login")
-	col := db.Collection("users")
+	usersCollection := MongoCN.Database(nameDB).Collection("users")
 	u.Password, _ = EncryptPassword(u.Password)
-	result, err := col.InsertOne(ctx, u)
+	result, err := usersCollection.InsertOne(ctx, u)
 	if err != nil {
 		return "", false, err
 	}
