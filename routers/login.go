@@ -14,21 +14,25 @@ func Login(response http.ResponseWriter, request *http.Request)  {
 	var t models.User
 	err := json.NewDecoder(request.Body).Decode(&t)
 	if err != nil {
-		http.Error(response, "Email or password invalid " + err.Error(), http.StatusBadRequest)
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"Email or password invalid `+ err.Error() +`"}`))
 		return
 	}
 	if len(t.Email) == 0 {
-		http.Error(response, "Email is required", http.StatusBadRequest)
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"Email is required"}`))
 		return
 	}
 	document, exists := bd.TriedLogin(t.Email, t.Password)
 	if !exists {
-		http.Error(response, "Email or password invalid", http.StatusBadRequest)
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"Email or password invalid"}`))
 		return
 	}
 	jwtKey, err1 := jwt.GenerateJWT(document)
 	if err1 != nil {
-		http.Error(response, "An error occurred while trying to generate the token " + err1.Error(), http.StatusBadRequest)
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"An error occurred while trying to generate the token `+ err1.Error() +`"}`))
 		return
 	}
 	resp := models.ResponseLogin {
