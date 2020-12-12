@@ -8,47 +8,107 @@ import (
 	"regexp"
 )
 
-var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+var emailRegex = regexp.MustCompile("^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,4}$").MatchString
+var lowerCase = regexp.MustCompile("^[a-z]+$").MatchString
+var upperCase = regexp.MustCompile("^[A-Z]+$").MatchString
+var number = regexp.MustCompile("^[0-9]+$").MatchString
+var symbol = regexp.MustCompile("[^A-Za-z0-9 ]").MatchString
 
-func Register(writer http.ResponseWriter, request *http.Request)  {
+func Register(response http.ResponseWriter, request *http.Request)  {
+	response.Header().Set("Content-Type", "application/json")
 	var t models.User
-	err := json.NewDecoder(request.Body).Decode(&t)
+	if validateData(&t, response, request) {
+		return
+	}
+	_, status, err := bd.InsertRegister(t)
 	if err != nil {
-		http.Error(writer, "Error in request data " + err.Error(), http.StatusBadRequest)
-		return
-	}
-	if len(t.Email) == 0 {
-		http.Error(writer, "Email is required", http.StatusBadRequest)
-		return
-	}
-	if !isEmailValid(t.Email) {
-		http.Error(writer, "Email is invalid", http.StatusBadRequest)
-		return
-	}
-	if len(t.Password) < 8 {
-		http.Error(writer, "Password must be greater than 8 characters", http.StatusBadRequest)
-		return
-	}
-	_, exists, _ := bd.CheckIsExitsUser(t.Email)
-	if exists {
-		http.Error(writer, "There is already a registered user with that email", http.StatusBadRequest)
-		return
-	}
-	_, status, err1 := bd.InsertRegister(t)
-	if err1 != nil {
-		http.Error(writer, "An error occurred while trying to register the user " + err1.Error(), http.StatusBadRequest)
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"An error occurred while trying to register the user `+ err.Error() +`"}`))
 		return
 	}
 	if !status {
-		http.Error(writer, "Failed to insert user record", http.StatusBadRequest)
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"Failed to insert user record"}`))
 		return
 	}
-	writer.WriteHeader(http.StatusCreated)
+	response.WriteHeader(http.StatusCreated)
+	_, _ = response.Write([]byte(`{"message":"Success"}`))
 }
 
-func isEmailValid(e string) bool {
-	if len(e) < 3 && len(e) > 254 {
+func validateData(t *models.User, response http.ResponseWriter, request *http.Request) bool {
+	err := json.NewDecoder(request.Body).Decode(&t)
+	if err != nil {
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"Error in request data ` + err.Error() + `"}`))
+		return true
+	}
+	if len(t.Email) == 0 {
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"Email address is required"}`))
+		return true
+	}
+	if !isEmailValid(t.Email) {
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"Email address is invalid"}`))
+		return true
+	}
+	if len(t.Password) < 8 {
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"Password must be greater than 8 characters"}`))
+		return true
+	}
+	if !isPasswordSecure(t.Password) {
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"Password is not secure. Password must contain uppercase, lowercase, numbers and special characters"}`))
+		return true
+	}
+	_, exists, _ := bd.CheckIsExitsUser(t.Email)
+	if exists {
+		response.WriteHeader(http.StatusBadRequest)
+		_, _ = response.Write([]byte(`{"error":"There is already a registered user with that email"}`))
+		return true
+	}
+	return false
+}
+
+func isEmailValid(email string) bool {
+	if len(email) < 3 && len(email) > 100 {
 		return false
 	}
-	return emailRegex.MatchString(e)
+	return emailRegex(email)
+}
+
+func isPasswordSecure(password string) bool {
+	hasLowercaseLetters := false
+	hasUppercaseLetters := false
+	hasNumbers := false
+	hasSymbols := false
+	for _, letter := range password {
+		if lowerCase(string(letter)) {
+			hasLowercaseLetters = true
+			break
+		}
+	}
+	for _, letter := range password {
+		if upperCase(string(letter)) {
+			hasUppercaseLetters = true
+			break
+		}
+	}
+	for _, letter := range password {
+		if number(string(letter)) {
+			hasNumbers = true
+			break
+		}
+	}
+	for _, letter := range password {
+		if symbol(string(letter)) {
+			hasSymbols = true
+			break
+		}
+	}
+	if hasLowercaseLetters && hasUppercaseLetters && hasNumbers && hasSymbols {
+		return true
+	}
+	return false
 }

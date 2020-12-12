@@ -8,8 +8,8 @@ import (
 )
 
 func GenerateJWT(t models.User) (string, error) {
-	key, _ := utils.GetValueEnvironment("JWT.KEY")
-	myKey := []byte(key)
+	secretKey, _ := utils.GetValueEnvironment("JWT.KEY")
+	myKey := []byte(secretKey)
 	payload := jwt.MapClaims{
 		"email":t.Email,
 		"firstName":t.FirstName,
